@@ -79,7 +79,7 @@ proc find_src {src_dir src_dir_exclude} {
 proc find_src_avhdl {src_dir src_dir_exclude} {
 
     if {[file isdirectory ${src_dir}] == 0} {        
-        post_message -type warning "No such source directory '${src_dir}'"
+        puts -type warning "No such source directory '${src_dir}'"
         return
     }
 
@@ -95,7 +95,7 @@ proc find_src_avhdl {src_dir src_dir_exclude} {
     }
 
     if {[llength ${src_all}] == 0} {        
-        post_message -type warning "No such source file in directory '${src_dir}'"
+        puts -type warning "No such source file in directory '${src_dir}'"
         return
     }    
 
