@@ -1,13 +1,13 @@
-set tcl_scripts_dir [file dirname [file normalize [info script]]]
-cd ${tcl_scripts_dir}/..
-
 package require cmdline
 set options {\
     { "project_name.arg" "" "Project name" } \
     { "src_dir.arg" "" "Source directory" } \
     { "src_dir_exclude.arg" "" "Exclude source directory" }
 }
-array set opts [::cmdline::getoptions quartus(args) ${options}]
+array set opts [::cmdline::getoptions argv ${options}]
+
+set tcl_scripts_dir [file dirname [file normalize [info script]]]
+cd ${tcl_scripts_dir}/..
 
 if {[string equal "" ${opts(project_name)}]} {
     set opts(project_name) [regsub {.*/} [pwd] {}]

@@ -1,9 +1,20 @@
 # Скрипт для создания проекта Active HDL в папке active_hdl, со всеми
 # исходниками из папки src и библиотеками для Cyclone II
 # 
-# Команда запуска скрипта:
+# Команда запуска скрипта без библиотек для Cyclone II:
 # avhdl -do "runscript -tcl tcl/avhdl_create_project.tcl"
 #
+# Команда запуска скрипта с библиотеками для Cyclone II:
+# avhdl -do "runscript -tcl tcl/avhdl_create_project.tcl -cycloneII"
+#
+
+package require cmdline
+# Чтение аргументов командной строки
+set options {\
+    { cycloneII "Include cycloneII libraries in project" } \
+}
+array set opts [::cmdline::getKnownOptions argv ${options}]
+
 
 # Полный путь до папки с данным скриптом
 set tcl_scripts_dir [file dirname [file normalize [info script]]]
@@ -36,7 +47,9 @@ foreach file ${src_all} {
 }
 
 # Компиляция библиотек для Cyclone II
-source ${tcl_scripts_dir}/avhdl_compile_cyclone_lib.tcl
+if {$opts(cycloneII)} {
+    source ${tcl_scripts_dir}/avhdl_compile_cyclone_lib.tcl    
+}
 
 # Компиляция всех исходников
 comp -reorder
