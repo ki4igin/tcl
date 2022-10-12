@@ -1,30 +1,45 @@
 # Скрипт для создания проекта Quartus в папке quartus, со всеми
 # исходниками из папки src
-# 
+#
 # Команда запуска скрипта:
 # quartus_sh -t tcl/quartus_sh_create_project.tcl
 #
+package require cmdline
 
-# Полный путь до папки с данным скриптом
-set tcl_scripts_dir [file dirname [file normalize [info script]]]
+# Чтение аргументов командной строки
+set options { \
+    { project.arg   ""              "Project name" } \
+    { folder.arg    "quartus"       "Folder name project" } \
+    { src.arg       "src"           "Source folder" } \
+    { tb.arg        ""              "Testbensh name for top level" } \
+}
+array set opts [::cmdline::getKnownOptions argv ${options}]
 
-# Переход на уровень выше папки со скриптом для создания проекта
-cd ${tcl_scripts_dir}/..
+# Полный путь до корневой папки
+set base_dir [pwd]
+
+# Полный путь до папки со скриптами
+set tcl_dir [file dirname [file normalize [info script]]]
 
 # ******************************************************************************
 # Настройки проекта
 # ******************************************************************************
 
 # Имя проекта, имя верхнего уровня
-set project_name [regsub {.*/} [pwd] {}]
+set project_name $opts(project)
+puts $project_name
+if {[string equal "" $project_name]} { 
+    set project_name [regsub {.*/} [pwd] {}] 
+}
 set top_level_name ${project_name}
 # set top_level_name lcd_test_top
 
-# Путь к исходным файлам относительно папки проекта quartus
-set src_dir ../src
+# Полный путь до папки с исходниками
+set src_folder $opts(src)
+set src_dir $base_dir/$src_folder
 
 # Папки исключенные из поиска иходных файлов
-set src_dir_exclude {testbench software} 
+set src_excluded_folders {testbench software}
 
 # Имя семейства и микросхемы
 set family "Cyclone II"
@@ -32,20 +47,20 @@ set device EP2C35F672C6
 
 # Имя верхнего уровня теста и имя объекта тестирования
 set tb_entity_name ${top_level_name}_tb
-set tb_instance_name syncronisation
+set tb_instance_name tb
 
-# Создание проекта в папке quartus
-file mkdir quartus
-cd quartus
+# Создание проекта Quartus
+set quartus_folder $opts(folder)
+file mkdir $quartus_folder
+cd $quartus_folder
 project_new ${project_name} -overwrite
 
 # ******************************************************************************
 # Add source files to project
 # ******************************************************************************
 
-source ${tcl_scripts_dir}/tools.tcl
-lassign [update_src_path ${src_dir} ${src_dir_exclude}] \
-    src_qip src_synt_vhd src_tb_vhd src_synt_v src_tb_v src_synt_sv src_tb_sv
+source ${tcl_dir}/tools.tcl
+array set src [update_src_path ${src_dir} ${src_excluded_folders}]
 
 # ******************************************************************************
 # Analysis & Synthesis Assignments
@@ -60,7 +75,7 @@ set_global_assignment -name SMART_RECOMPILE ON
 # Pin & Location Assignments
 # ******************************************************************************
 
-source ${tcl_scripts_dir}/DE2_pin_location.tcl
+source ${tcl_dir}/DE2_pin_location.tcl
 
 # ******************************************************************************
 # Fitter Assignments
@@ -75,11 +90,11 @@ set_global_assignment -name RESERVE_ALL_UNUSED_PINS "AS INPUT TRI-STATED"
 # ******************************************************************************
 
 # Поиск файла теста по его имени из списка тестов
-set tb_file_name ""
-if {[string equal "" ${src_tb_vhd}]} {
+set tb_file_name $opts(tb)
+if {[string equal "" $src(tb_vhd)]} {
 
 } else {
-    set tb_file_name [lsearch -inline -all ${src_tb_vhd} */${tb_entity_name}.vhd]
+    set tb_file_name [lsearch -inline -all $src(tb_vhd) */${tb_entity_name}.vhd]
 }
 
 if {[string equal "" ${tb_file_name}]} {

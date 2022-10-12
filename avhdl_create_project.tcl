@@ -2,19 +2,19 @@
 # исходниками из папки src и библиотеками для Cyclone II
 # 
 # Команда запуска скрипта без библиотек для Cyclone II:
-# avhdl -do "runscript -tcl tcl/avhdl_create_project.tcl"
+# avhdl -do "do tcl/avhdl_create_project.tcl"
 #
 # Команда запуска скрипта с библиотеками для Cyclone II:
-# avhdl -do "runscript -tcl tcl/avhdl_create_project.tcl -cII"
+# avhdl -do "do tcl/avhdl_create_project.tcl -cII"
 #
 package require cmdline
 
 # Чтение аргументов командной строки
 set options {\
-    { p.arg     ""              "Project Active HDL name" } \
-    { f.arg     "active_hdl"    "Folder name project Active HDL" } \
-    { src.arg   "src"           "Source folder" } \
-    { cII                       "Include Cyclone II libraries in project" } \
+    { project.arg   ""              "Project name" } \
+    { folder.arg    "active_hdl"    "Folder name project" } \
+    { src.arg       "src"           "Source folder" } \
+    { cII                           "Include Cyclone II libraries in project" } \
 }
 array set opts [::cmdline::getKnownOptions argv ${options}]
 
@@ -29,14 +29,14 @@ set src_folder $opts(src)
 set src_dir $base_dir/$src_folder
 
 # Имя проекта Active HDL
-set project_name $opts(p)
+set project_name $opts(project)
 puts $project_name
 if {[string equal "" $project_name]} { 
     set project_name [regsub {.*/} [pwd] {}] 
 }
 
 # Создание проекта Active HDL
-set avhdl_folder $opts(f)
+set avhdl_folder $opts(folder)
 cd ${base_dir}
 
 if {[string equal $avhdl_folder [glob -nocomplain -types d $avhdl_folder]]} {
@@ -50,7 +50,7 @@ design create -a -nodesdir ${project_name} $avhdl_folder
 # Добавление исходников с помощью процедуры find_src_avhdl из tools.tcl
 source ${tcl_dir}/tools.tcl
 set src_excluded_folders {testbench software}
-set src_all [join [find_src_avhdl ${src_dir} ${src_excluded_folders}]]
+set src_all [array2list [find_src ${src_dir} ${src_excluded_folders}]]
 
 foreach file ${src_all} {
     addfile -auto ${file}

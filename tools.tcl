@@ -1,121 +1,88 @@
+set tcl_dir [file dirname [info script]]
+source $tcl_dir/puts_colors.tcl
+
 proc update_src_path {src_dir src_dir_exclude} {
 
-    lassign [find_src ${src_dir} ${src_dir_exclude}] \
-        src_qip src_synt_vhd src_tb_vhd src_synt_v src_tb_v src_synt_sv src_tb_sv    
-
-    foreach file ${src_qip} {
-        set_global_assignment -name QIP_FILE ${file}
+    array set src [find_src_qip ${src_dir} ${src_dir_exclude}]
+    array set settings { \
+        qip QIP_FILE \
+        synt_vhd VHDL_FILE tb_vhd VHDL_TEST_BENCH_FILE \
+        synt_v VERILOG_FILE tb_v VERILOG_TEST_BENCH_FILE \
+        synt_sv SYSTEMVERILOG_FILE tb_sv SYSTEMVERILOG_TEST_BENCH_FILE \
     }
-    foreach file ${src_synt_vhd} {
-        set_global_assignment -name VHDL_FILE ${file}
-    }
-    foreach file ${src_tb_vhd} {
-        set_global_assignment -name VHDL_TEST_BENCH_FILE ${file}
-    }
-    foreach file ${src_synt_v} {
-        set_global_assignment -name VERILOG_FILE ${file}
-    }
-    foreach file ${src_tb_v} {
-        set_global_assignment -name VERILOG_TEST_BENCH_FILE ${file}
-    }
-    foreach file ${src_synt_sv} {
-        set_global_assignment -name SYSTEMVERILOG_FILE ${file}
-    }
-    foreach file ${src_tb_sv} {
-        set_global_assignment -name SYSTEMVERILOG_TEST_BENCH_FILE ${file}
-    }
-
-    return [list ${src_qip} ${src_synt_vhd} ${src_tb_vhd} ${src_synt_v} ${src_tb_v} ${src_synt_sv} ${src_tb_sv}]
-}
-
-proc find_src {src_dir src_dir_exclude} {
-
-    if {[file isdirectory ${src_dir}] == 0} {        
-        post_message -type warning "No such source directory '${src_dir}'"
-        return
-    }
-
-    package require fileutil   
-    set src_all [fileutil::findByPattern ${src_dir} {*.qip *.vhd *.v *.sv}]
-    set src_all [lsort ${src_all}]  
-   
-    foreach dir_exclude ${src_dir_exclude} {
-        set index [lsearch -all -glob ${src_all} *\/${dir_exclude}\/*]
-        if {[llength $index] != 0} {
-            set src_all [lreplace ${src_all} [lindex ${index} 0] [lindex ${index} end]]
+    foreach s [array names settings] {
+        foreach f $src($s) {
+            set_global_assignment -name $settings($s) $f
         }
     }
-
-    if {[llength ${src_all}] == 0} {        
-        post_message -type warning "No such source file in directory '${src_dir}'"
-        return
-    }
-
-    set src_qip [lsearch -inline -all ${src_all} *.qip]
-
-    foreach file_qip ${src_qip} {
-        set file_qip_dir [file dirname ${file_qip}]
-        set index [lsearch -all -glob ${src_all} ${file_qip_dir}*]
-        if {[llength $index] != 0} {
-            set src_all [lreplace ${src_all} [lindex ${index} 0] [lindex ${index} end]]
-        }
-    }
-
-    set src_all_vhd [lsearch -inline -all ${src_all} *.vhd]
-    set src_synt_vhd [lsearch -inline -all -regexp -not ${src_all_vhd} .*tb\.vhd|.*inst\.vhd]
-    set src_tb_vhd [lsearch -inline -all ${src_all_vhd} *tb.vhd]
-
-    set src_all_v [lsearch -inline -all ${src_all} *.v]
-    set src_synt_v [lsearch -inline -all -regexp -not ${src_all_v} .*tb\.v|.*inst\.v]
-    set src_tb_v [lsearch -inline -all ${src_all_v} *tb.v]
-
-    set src_all_sv [lsearch -inline -all ${src_all} *.sv]
-    set src_synt_sv [lsearch -inline -all -regexp -not ${src_all_sv} .*tb\.sv|.*inst\.sv]
-    set src_tb_sv [lsearch -inline -all ${src_all_sv} *tb.sv]
-
-    return [list ${src_qip} ${src_synt_vhd} ${src_tb_vhd} ${src_synt_v} ${src_tb_v} ${src_synt_sv} ${src_tb_sv}]
+    array get src
 }
 
-proc find_src_avhdl {src_dir src_dir_exclude} {
-
-    if {[file isdirectory ${src_dir}] == 0} {        
-        puts -type warning "No such source directory '${src_dir}'"
-        return
-    }
-
-    package require fileutil   
-    set src_all [fileutil::findByPattern ${src_dir} {*.vhd *.v *.sv}]
-    set src_all [lsort ${src_all}]  
-   
-    foreach dir_exclude ${src_dir_exclude} {
-        set index [lsearch -all -glob ${src_all} *\/${dir_exclude}\/*]
-        if {[llength $index] != 0} {
-            set src_all [lreplace ${src_all} [lindex ${index} 0] [lindex ${index} end]]
-        }
-    }
-
-    if {[llength ${src_all}] == 0} {        
-        puts -type warning "No such source file in directory '${src_dir}'"
-        return
-    }    
-
-    set src_all_vhd [lsearch -inline -all ${src_all} *.vhd]
-    set src_synt_vhd [lsearch -inline -all -regexp -not ${src_all_vhd} .*tb\.vhd|.*inst\.vhd]
-    set src_tb_vhd [lsearch -inline -all ${src_all_vhd} *tb.vhd]
-
-    set src_all_v [lsearch -inline -all ${src_all} *.v]
-    set src_synt_v [lsearch -inline -all -regexp -not ${src_all_v} .*tb\.v|.*inst\.v]
-    set src_tb_v [lsearch -inline -all ${src_all_v} *tb.v]
-
-    set src_all_sv [lsearch -inline -all ${src_all} *.sv]
-    set src_synt_sv [lsearch -inline -all -regexp -not ${src_all_sv} .*tb\.sv|.*inst\.sv]
-    set src_tb_sv [lsearch -inline -all ${src_all_sv} *tb.sv]
-
-    return [list ${src_synt_vhd} ${src_tb_vhd} ${src_synt_v} ${src_tb_v} ${src_synt_sv} ${src_tb_sv}]
+proc split_src {src separator} {
+    set src_exc [lsearch -inline -all -regexp -not $src $separator]
+    set src_inc [lsearch -inline -all -regexp $src $separator]
+    return [list $src_exc $src_inc]
 }
 
-proc color {foreground text} {
-    # tput is a little Unix utility that lets you use the termcap database
-    # *much* more easily...
-    return [exec tput setaf $foreground]$text[exec tput sgr0]
+proc find_src {src_dir src_excluded_folders} {
+
+    if {[file isdirectory ${src_dir}] == 0} {
+        puts_warn "No such source directory '${src_dir}'"
+        return
+    }
+
+    package require fileutil
+    set src_all [lsort [fileutil::findByPattern ${src_dir} {*.vhd *.v *.sv}]]
+    set src_all [lsearch -inline -all -not -regexp ${src_all} .*\/inst_.*|.*_inst\..*]
+
+    foreach folder ${src_excluded_folders} {
+        set src_all [lsearch -inline -all -regexp -not $src_all .*\/$folder\/.*]
+    }
+
+    if {[llength ${src_all}] == 0} {
+        puts_warn "No such source file in directory '${src_dir}'"
+        return
+    }
+
+    set separator ".*\/tb_.*|.*_tb\..*"
+    foreach ext [list vhd v sv] {
+        set src_temp [lsearch -inline -all ${src_all} *.$ext]
+        lassign [split_src $src_temp $separator] src(synt_$ext) src(tb_$ext)
+    }
+
+    array get src    
+}
+
+proc find_src_qip {src_dir src_excluded_folders} {
+
+    if {[file isdirectory ${src_dir}] == 0} {
+        puts_warn "No such source directory '${src_dir}'"
+        return
+    }
+
+    package require fileutil
+    set src(qip) [fileutil::findByPattern ${src_dir} *.qip]
+    set folders_qip {}
+    foreach dir $src(qip) {
+        lappend folders_qip [regsub {.*/} [file dirname $dir] {}]
+    }
+
+    lappend src_excluded_folders {*}$folders_qip
+    array set src [find_src $src_dir $src_excluded_folders]        
+
+    array get src
+}
+
+proc array2list {arr_str} {
+    set l {}
+    if {[expr {[llength $arr_str]%2}]} {
+        puts_warn "proc array2list: \
+            arr_str must have an even number of elements"
+        return $l;
+    }
+    array set arr $arr_str
+    foreach el [array names arr] {
+        lappend l $arr($el)
+    }
+    lsort [join $l]
 }
