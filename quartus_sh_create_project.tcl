@@ -89,6 +89,18 @@ set_global_assignment -name RESERVE_ALL_UNUSED_PINS "AS INPUT TRI-STATED"
 # EDA Settings
 # ******************************************************************************
 
+set_global_assignment -name EDA_OUTPUT_DATA_FORMAT VHDL -section_id eda_simulation
+set_global_assignment -name EDA_SIMULATION_TOOL "Active-HDL (VHDL)"
+set_global_assignment -name EDA_TEST_BENCH_ENABLE_STATUS TEST_BENCH_MODE -section_id eda_simulation
+
+# Добавление тестов
+foreach tb [join [list $src(tb_sv) $src(tb_vhd) $src(tb_v)]] {
+    set tb_name [regsub ".*/" [file rootname $tb] ""]
+    set_global_assignment -name EDA_TEST_BENCH_NAME $tb_name -section_id eda_simulation
+    set_global_assignment -name EDA_TEST_BENCH_MODULE_NAME $tb_name -section_id $tb_name
+    set_global_assignment -name EDA_TEST_BENCH_FILE $tb -section_id $tb_name
+}
+
 # Поиск файла теста по его имени из списка тестов
 set tb_file_name $opts(tb)
 if {[string equal "" $src(tb_vhd)]} {
@@ -100,15 +112,7 @@ if {[string equal "" $src(tb_vhd)]} {
 if {[string equal "" ${tb_file_name}]} {
 
 } else {
-    set_global_assignment -name EDA_OUTPUT_DATA_FORMAT VHDL -section_id eda_simulation
-    set_global_assignment -name EDA_SIMULATION_TOOL "Active-HDL (VHDL)"
-    # set_global_assignment -name EDA_TIME_SCALE "1 ps"
-    set_global_assignment -name EDA_TEST_BENCH_ENABLE_STATUS TEST_BENCH_MODE -section_id eda_simulation
     set_global_assignment -name EDA_NATIVELINK_SIMULATION_TEST_BENCH ${tb_entity_name} -section_id eda_simulation
-    set_global_assignment -name EDA_TEST_BENCH_NAME ${tb_entity_name} -section_id eda_simulation
-    set_global_assignment -name EDA_DESIGN_INSTANCE_NAME ${tb_entity_name}/${tb_instance_name} -section_id ${tb_entity_name}
-    set_global_assignment -name EDA_TEST_BENCH_MODULE_NAME ${tb_entity_name} -section_id ${tb_entity_name}
-    set_global_assignment -name EDA_TEST_BENCH_FILE ${tb_file_name} -hdl_version VHDL_2008 -section_id ${tb_entity_name}
 }
 
 
