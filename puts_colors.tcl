@@ -11,12 +11,12 @@ proc color {foreground text} {
 }
 
 proc puts_warn {text} {
-    puts -nonewline [color 6 "Warning "]
+    puts -nonewline [color 6 "Warning: "]
     puts [color 6 $text]
 }
 
 proc puts_err {text} {
-    puts -nonewline [color 1 "Error "]
+    puts -nonewline [color 1 "Error: "]
     puts [color 1 $text]
 }
 

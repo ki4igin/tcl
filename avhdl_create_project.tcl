@@ -22,7 +22,7 @@ array set opts [::cmdline::getKnownOptions argv ${options}]
 set base_dir [pwd]
 
 # Полный путь до папки со скриптами
-set tcl_dir [file dirname [file normalize [info script]]]
+set tcl_dir [file dirname [info script]]
 
 # Полный путь до папки с исходниками
 set src_folder $opts(src)

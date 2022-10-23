@@ -1,23 +1,6 @@
 set tcl_dir [file dirname [info script]]
 source $tcl_dir/puts_colors.tcl
 
-proc update_src_path {src_dir src_dir_exclude} {
-
-    array set src [find_src_qip ${src_dir} ${src_dir_exclude}]
-    array set settings { \
-        qip QIP_FILE \
-        synt_vhd VHDL_FILE tb_vhd VHDL_TEST_BENCH_FILE \
-        synt_v VERILOG_FILE tb_v VERILOG_TEST_BENCH_FILE \
-        synt_sv SYSTEMVERILOG_FILE tb_sv SYSTEMVERILOG_TEST_BENCH_FILE \
-    }
-    foreach s [array names settings] {
-        foreach f $src($s) {
-            set_global_assignment -name $settings($s) $f
-        }
-    }
-    array get src
-}
-
 proc split_src {src separator} {
     set src_exc [lsearch -inline -all -regexp -not $src $separator]
     set src_inc [lsearch -inline -all -regexp $src $separator]
@@ -28,7 +11,7 @@ proc find_src {src_dir src_excluded_folders} {
 
     if {[file isdirectory ${src_dir}] == 0} {
         puts_warn "No such source directory '${src_dir}'"
-        return
+        return [create_empty_array {synt_vhd tb_vhd synt_v tb_v synt_sv tb_sv}]
     }
 
     package require fileutil
@@ -41,7 +24,7 @@ proc find_src {src_dir src_excluded_folders} {
 
     if {[llength ${src_all}] == 0} {
         puts_warn "No such source file in directory '${src_dir}'"
-        return
+        return [create_empty_array {synt_vhd tb_vhd synt_v tb_v synt_sv tb_sv}]
     }
 
     set separator ".*\/tb_.*|.*_tb\..*"
@@ -57,7 +40,7 @@ proc find_src_qip {src_dir src_excluded_folders} {
 
     if {[file isdirectory ${src_dir}] == 0} {
         puts_warn "No such source directory '${src_dir}'"
-        return
+        return [create_empty_array {qip synt_vhd tb_vhd synt_v tb_v synt_sv tb_sv}]
     }
 
     package require fileutil
@@ -68,7 +51,7 @@ proc find_src_qip {src_dir src_excluded_folders} {
     }
 
     lappend src_excluded_folders {*}$folders_qip
-    array set src [find_src $src_dir $src_excluded_folders]        
+    array set src [find_src $src_dir $src_excluded_folders]
 
     array get src
 }
@@ -86,3 +69,11 @@ proc array2list {arr_str} {
     }
     lsort [join $l]
 }
+
+proc create_empty_array {names} {
+    foreach name $names {
+        set arr($name) "";
+    }
+    array get arr
+}
+
