@@ -7,26 +7,21 @@
 # Команда запуска скрипта с библиотеками для Cyclone II:
 # avhdl -do "do tcl/avhdl_create_project.tcl -cII"
 #
-package require cmdline
+set tcl_dir [file dirname [info script]]
+source $tcl_dir/tools.tcl
 
 # Чтение аргументов командной строки
 set options {\
-    { project.arg   ""              "Project name" } \
-    { folder.arg    "active_hdl"    "Folder name project" } \
-    { src.arg       "src"           "Source folder" } \
-    { cII                           "Include Cyclone II libraries in project" } \
+    { project.arg   ""                      "Project name"                  } \
+    { folder.arg    "active_hdl"            "Folder name project"           } \
+    { src.arg       "src"                   "Source folder"                 } \
+    { src_exc.arg   "testbench software"    "Exclude source folder"         } \
+    { cII                                   "Include Cyclone II libraries in project" } \
 }
-array set opts [::cmdline::getKnownOptions argv ${options}]
+array set opts [cmd_getopts argv ${options}]
 
 # Полный путь до корневой папки
 set base_dir [pwd]
-
-# Полный путь до папки со скриптами
-set tcl_dir [file dirname [info script]]
-
-# Полный путь до папки с исходниками
-set src_folder $opts(src)
-set src_dir $base_dir/$src_folder
 
 # Имя проекта Active HDL
 set project_name $opts(project)
@@ -37,8 +32,6 @@ if {[string equal "" $project_name]} {
 
 # Создание проекта Active HDL
 set avhdl_folder $opts(folder)
-cd ${base_dir}
-
 if {[string equal $avhdl_folder [glob -nocomplain -types d $avhdl_folder]]} {
     file delete -force $avhdl_folder
 }
@@ -46,11 +39,10 @@ file mkdir $avhdl_folder
 
 workspace create $avhdl_folder/${project_name}
 design create -a -nodesdir ${project_name} $avhdl_folder
+set rel_base_dir [regsub -all {/[^/]*} [regsub $base_dir [pwd] ""] "../" ]
 
-# Добавление исходников с помощью процедуры find_src_avhdl из tools.tcl
-source ${tcl_dir}/tools.tcl
-set src_excluded_folders {testbench software}
-set src_all [array2list [find_src ${src_dir} ${src_excluded_folders}]]
+# Добавление исходников с помощью процедуры find_src из tools.tcl
+set src_all [array2list [find_src $rel_base_dir$opts(src) $opts(src_exc)]]
 
 foreach file ${src_all} {
     addfile -auto ${file}
