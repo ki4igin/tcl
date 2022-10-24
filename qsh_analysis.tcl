@@ -4,14 +4,14 @@
 # Команда запуска скрипта:
 # quartus_sh -t tcl/quartus_sh_create_project.tcl
 #
-package require cmdline
 set tcl_dir [file dirname [info script]]
-source $tcl_dir/quartus_sh_open.tcl
+source $tcl_dir/tools.tcl
+source $tcl_dir/qsh_tools.tcl
 
 set options {\
     { project.arg   ""      "Project name"                                  } \
 }
-array set opts [::cmdline::getKnownOptions argv ${options}]
+array set opts [cmd_getopts argv ${options}]
 
 set project_name [open $opts(project)]
 

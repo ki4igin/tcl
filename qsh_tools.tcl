@@ -1,6 +1,5 @@
 package require fileutil
 set tcl_dir [file dirname [info script]]
-source $tcl_dir/puts_colors.tcl
 source $tcl_dir/tools.tcl
 
 proc update_src_path {src_dir src_dir_exclude} {

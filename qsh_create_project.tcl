@@ -3,7 +3,8 @@
 # Команда запуска скрипта:
 # quartus_sh -t tcl/qsh_create_project.tcl
 #
-package require cmdline
+set tcl_dir [file dirname [info script]]
+source $tcl_dir/tools.tcl
 
 # Чтение аргументов командной строки
 set options { \
@@ -16,12 +17,10 @@ set options { \
     { family.arg    "Cyclone II"            "Device family"                 } \
     { device.arg    "EP2C35F672C6"          "Device name"                   } \
 }
-array set opts [::cmdline::getKnownOptions argv ${options}]
+array set opts [cmd_getopts argv ${options}]
 
 # Полный путь до корневой папки
 set base_dir [pwd]
-# Путь до папки со скриптами
-set tcl_dir [file dirname [info script]]
 
 # ******************************************************************************
 # Настройки проекта
@@ -61,7 +60,7 @@ cd $base_dir
 # Add source files to project and Pin & Location Assignments
 # ******************************************************************************
 
-set argv [list -project $project_name -src $opts(src) -src_exc $$opts(src_ext)]
+set argv [list -project $project_name -src $opts(src) -src_exc $opts(src_exc)]
 set argc [llength $argv]
 source ${tcl_dir}/qsh_update.tcl
 

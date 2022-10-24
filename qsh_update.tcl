@@ -1,5 +1,5 @@
-package require cmdline
 set tcl_dir [file dirname [info script]]
+source $tcl_dir/tools.tcl
 source $tcl_dir/qsh_tools.tcl
 
 set options {\
@@ -9,10 +9,7 @@ set options {\
     { obj.arg       "all"                   "Objects to update: all, src, pin, tcl"} \
 }
 
-if {[catch {array set opts [::cmdline::getKnownOptions argv ${options}]} msg]} {
-    puts $msg
-    exit 1
-}
+array set opts [cmd_getopts argv ${options}]
 
 set base_dir [pwd]
 set project_name [open $opts(project)]

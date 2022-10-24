@@ -1,6 +1,10 @@
+package require fileutil
+package require cmdline
 set tcl_dir [file dirname [info script]]
-source $tcl_dir/puts_colors.tcl
 
+################################################################################
+# Для поиска исходников 
+################################################################################
 proc split_src {src separator} {
     set src_exc [lsearch -inline -all -regexp -not $src $separator]
     set src_inc [lsearch -inline -all -regexp $src $separator]
@@ -13,8 +17,7 @@ proc find_src {src_dir src_excluded_folders} {
         puts_warn "No such source directory '${src_dir}'"
         return [create_empty_array {synt_vhd tb_vhd synt_v tb_v synt_sv tb_sv}]
     }
-
-    package require fileutil
+    
     set src_all [lsort [fileutil::findByPattern ${src_dir} {*.vhd *.v *.sv}]]
     set src_all [lsearch -inline -all -not -regexp ${src_all} .*\/inst_.*|.*_inst\..*]
 
@@ -43,7 +46,6 @@ proc find_src_qip {src_dir src_excluded_folders} {
         return [create_empty_array {qip synt_vhd tb_vhd synt_v tb_v synt_sv tb_sv}]
     }
 
-    package require fileutil
     set src(qip) [fileutil::findByPattern ${src_dir} *.qip]
     set folders_qip {}
     foreach dir $src(qip) {
@@ -56,6 +58,9 @@ proc find_src_qip {src_dir src_excluded_folders} {
     array get src
 }
 
+################################################################################
+# Процедуры работы с массивами
+################################################################################
 proc array2list {arr_str} {
     set l {}
     if {[expr {[llength $arr_str]%2}]} {
@@ -75,5 +80,71 @@ proc create_empty_array {names} {
         set arr($name) "";
     }
     array get arr
+}
+
+################################################################################
+# Процедуры для работы с агрументами командной строки
+################################################################################
+proc getoptions {arglistVar optlist usage} {
+    upvar 1 $arglistVar argv
+    # Warning: Internal cmdline function
+    set opts [::cmdline::GetOptionDefaults $optlist result]
+    while {[set err [::cmdline::getopt argv $opts opt arg]]} {
+        if {$err < 0} {
+            return -code error -errorcode {CMDLINE ERROR} $arg
+        }
+        set result($opt) $arg
+    }
+    if {[info exists result(?)] || [info exists result(help)]} {
+        return -code error -errorcode {CMDLINE USAGE} \
+            [::cmdline::usage $optlist $usage]
+    }
+    return [array get result]
+}
+
+proc cmd_getopts {arglistVar optlist} {
+    upvar 1 $arglistVar argv
+    set my_usage "options are:"
+    if {[catch {array set params [getoptions argv $optlist $my_usage]} msg]} {
+        if {[string equal -length 14 "Illegal option" $msg]} {
+            set tcl_name [info script]
+            puts_err "$tcl_name $msg"
+        } else {
+            puts $msg
+        }    
+        exit 0
+    }
+    array get params
+}
+
+################################################################################
+# Процедуры для цветного вывода 
+################################################################################
+proc puts_all_colors {} {
+    for {set i 0} {$i < 8} {incr i} {
+        puts [color $i $i]
+    }
+}
+
+proc color {foreground text} {
+    # tput is a little Unix utility that lets you use the termcap database
+    # *much* more easily...
+    return [exec tput setaf $foreground]$text[exec tput sgr0]
+}
+
+proc puts_warn {text} {
+    puts -nonewline [color 6 "Warning: "]
+    puts [color 6 $text]
+}
+
+proc puts_err {text} {
+    puts -nonewline [color 1 "Error: "]
+    puts [color 1 $text]
+}
+
+proc puts_all_colors {} {
+    for {set i 0} {$i < 8} {incr i} {
+        puts [color $i $i]
+    }
 }
 
