@@ -11,6 +11,17 @@ proc split_src {src separator} {
     return [list $src_exc $src_inc]
 }
 
+proc find_default_qsf {board_name} {
+    set dir board
+    set reqexp .*${board_name}.*\.qsf$
+    set file [find_file $reqexp $dir ""]
+    if {![string equal "" $file]} {
+        return $file
+    }
+    puts_warn "Default qsf filt not found in directory 'board'"
+    return ""
+}
+
 proc find_top_level {project_name src_dir src_excluded_folders} {
     set reqexp (top.*${project_name})|(${project_name}.*top).*(vhd|sv|v)$
     set file [find_file $reqexp $src_dir $src_excluded_folders]
