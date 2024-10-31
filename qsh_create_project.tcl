@@ -14,8 +14,7 @@ set options { \
     { src_exc.arg   "testbench software"    "Exclude source folder"         } \
     { top.arg       ""                      "Top level name"                } \
     { tb.arg        ""                      "Testbensh name for top level"  } \
-    { family.arg    "Cyclone II"            "Device family"                 } \
-    { device.arg    "EP2C35F672C6"          "Device name"                   } \
+    { board.arg     ""                      "Board name"                    } \
 }
 array set opts [cmd_getopts argv ${options}]
 
@@ -25,7 +24,6 @@ set base_dir [pwd]
 # ******************************************************************************
 # Настройки проекта
 # ******************************************************************************
-
 # Имя проекта, имя верхнего уровня, имя теста верхнего уровня
 if {[string equal "" $opts(project)]} { 
     set project_name [regsub ".*/" [pwd] ""]     
@@ -33,21 +31,18 @@ if {[string equal "" $opts(project)]} {
     set project_name $opts(project)
 }
 
-if {[string equal "" $opts(top)]} { 
-    set top_level_entity $project_name
+if {[string equal "" $opts(top)]} {
+    set top_level [find_top_level $project_name $opts(src) $opts(src_exc)]
+    set top_level_entity [regsub ".*/" [file rootname $top_level] ""]
 } else {
     set top_level_entity $opts(top)
 }
 
 if {[string equal "" $opts(tb)]} { 
-    set tb_top_level ${top_level_entity}_tb
+    set tb_top_level ${project_name}_tb
 } else {
     set tb_top_level $opts(tb)
 }
-
-# Имя семейства и микросхемы
-set family $opts(family)
-set device $opts(device)
 
 # Создание проекта Quartus
 set quartus_folder $opts(folder)
@@ -57,9 +52,10 @@ project_new $project_name -overwrite
 cd $base_dir
 
 # ******************************************************************************
-# Add source files to project and Pin & Location Assignments
+# Add default board Assignments abd source files to project 
 # ******************************************************************************
-
+set default_qsf [find_default_qsf $opts(board)]
+source ${default_qsf}
 set argv [list -project $project_name -src $opts(src) -src_exc $opts(src_exc)]
 set argc [llength $argv]
 source ${tcl_dir}/qsh_update.tcl
@@ -67,8 +63,6 @@ source ${tcl_dir}/qsh_update.tcl
 # ******************************************************************************
 # Analysis & Synthesis Assignments
 # ******************************************************************************
-
-set_global_assignment -name FAMILY ${family}
 set_global_assignment -name TOP_LEVEL_ENTITY ${top_level_entity}
 set_global_assignment -name VHDL_INPUT_VERSION VHDL_2008
 set_global_assignment -name SMART_RECOMPILE ON
@@ -76,15 +70,11 @@ set_global_assignment -name SMART_RECOMPILE ON
 # ******************************************************************************
 # Fitter Assignments
 # ******************************************************************************
-
-set_global_assignment -name DEVICE ${device}
 set_global_assignment -name PROJECT_OUTPUT_DIRECTORY output_files
-set_global_assignment -name RESERVE_ALL_UNUSED_PINS "AS INPUT TRI-STATED"
 
 # ******************************************************************************
 # EDA Settings
 # ******************************************************************************
-
 set_global_assignment -name EDA_OUTPUT_DATA_FORMAT VHDL -section_id eda_simulation
 set_global_assignment -name EDA_SIMULATION_TOOL "Active-HDL (VHDL)"
 set_global_assignment -name EDA_TEST_BENCH_ENABLE_STATUS TEST_BENCH_MODE -section_id eda_simulation
@@ -93,5 +83,4 @@ set_global_assignment -name EDA_NATIVELINK_SIMULATION_TEST_BENCH ${tb_top_level}
 # ******************************************************************************
 # Close Project
 # ******************************************************************************
-
 project_close

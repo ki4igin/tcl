@@ -1,5 +1,4 @@
-# Скрипт для создания проекта Quartus в папке quartus, со всеми
-# исходниками из папки src
+# Скрипт для запуска анализа проекта Quartus 
 #
 # Команда запуска скрипта:
 # quartus_sh -t tcl/quartus_sh_create_project.tcl

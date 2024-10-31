@@ -17,12 +17,10 @@ set rel_base_dir [regsub -all {/[^/]*} [regsub $base_dir [pwd] ""] "../" ]
 
 switch $opts(obj) {
     all {
-        update_pins_location $rel_base_dir$tcl_dir
         update_src_path $rel_base_dir$opts(src) $opts(src_exc)
         update_tcl_path $rel_base_dir$tcl_dir
     }
     src {update_src_path $rel_base_dir$opts(src) $opts(src_exc)}
-    pin {update_pins_location $rel_base_dir$tcl_dir}
     tcl {update_tcl_path $rel_base_dir$tcl_dir}
     default {}
 }

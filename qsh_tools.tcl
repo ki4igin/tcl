@@ -34,16 +34,6 @@ proc update_src_path {src_dir src_dir_exclude} {
     array get src
 }
 
-proc update_pins_location {tcl_dir} {
-    if {![file exists ${tcl_dir}/pins_location.tcl]} {
-        puts_warn "File pins location ${tcl_dir}/pins_location.tcl not found"
-        return
-    }
-    remove_all_instance_assignments -name LOCATION -to *
-    remove_all_instance_assignments -name IO_STANDARD -to *
-    source $tcl_dir/pins_location.tcl
-}
-
 proc update_tcl_path {tcl_dir} {    
     set tcl_all [lsort [fileutil::findByPattern $tcl_dir {*.tcl}]]
     set tcl_qsh [lsearch -inline -all -regexp $tcl_all .*/qsh_.*]]

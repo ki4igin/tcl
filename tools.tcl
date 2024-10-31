@@ -11,6 +11,41 @@ proc split_src {src separator} {
     return [list $src_exc $src_inc]
 }
 
+proc find_top_level {project_name src_dir src_excluded_folders} {
+    set reqexp (top.*${project_name})|(${project_name}.*top).*(vhd|sv|v)$
+    set file [find_file $reqexp $src_dir $src_excluded_folders]
+    if {![string equal "" $file]} {
+        return $file
+    }
+
+    set reqexp ${project_name}.*(vhd|sv|v)$
+    set file [find_file $reqexp $src_dir $src_excluded_folders]
+    if {![string equal "" $file]} {
+        return $file
+    }
+    puts_warn "Top level not found in directory '${src_dir}'"
+    return ""
+}
+
+proc find_file {reqexp src_dir src_excluded_folders} {
+
+    if {[file isdirectory ${src_dir}] == 0} {
+        puts_warn "No such source directory '${src_dir}'"
+        return ""
+    }    
+
+    set files [lsort [fileutil::findByPattern ${src_dir} -regexp $reqexp]]
+    foreach folder ${src_excluded_folders} {
+        set files [lsearch -inline -all -regexp -not $files .*\/$folder\/.*]
+    }
+
+    if {[llength ${files}] == 0} {        
+        return ""
+    }
+
+    return [lindex $files 0]
+}
+
 proc find_src {src_dir src_excluded_folders} {
 
     if {[file isdirectory ${src_dir}] == 0} {
