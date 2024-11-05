@@ -1,7 +1,7 @@
 # Скрипт для запуска анализа проекта Quartus 
 #
 # Команда запуска скрипта:
-# quartus_sh -t tcl/quartus_sh_create_project.tcl
+# quartus_sh -t tcl/qsh_analysis.tcl
 #
 set tcl_dir [file dirname [info script]]
 source $tcl_dir/tools.tcl
